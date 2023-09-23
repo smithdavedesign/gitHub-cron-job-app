@@ -1,29 +1,36 @@
 var express = require('express');
+const crypto = require('crypto');
 const cron = require('node-cron');
-const fs = require('fs');
-const axios = require('axios');
 const { Octokit } = require('@octokit/core');
+require('dotenv').config(); // Load environment variables from .env
+
 const router = express.Router();
 
-// Initialize Octokit with your GitHub Personal Access Token
-const octokit = new Octokit({ auth: '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' });
 
-// Function to update repository metadata
-async function updateRepository(owner, repo, updates) {
+// Initialize Octokit with your GitHub Personal Access Token
+// const octokit = new Octokit({ auth: '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' });
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+
+// Function to fetch the current content and SHA of a file in a repository
+async function getFileContentAndSha(owner, repo, path) {
   try {
-    const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
+    const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
       owner: owner,
       repo: repo,
-      ...updates, // Include metadata updates (name, description, etc.) as an object
+      path: path,
     });
-    return response.data;
+    return {
+      content: response.data.content,
+      sha: response.data.sha,
+    };
   } catch (error) {
     throw error;
   }
 }
 
 // Function to update the README file in a repository
-async function updateReadme(owner, repo, path, message, content) {
+async function updateReadme(owner, repo, path, message, content, sha) {
   try {
     const response = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
       owner: owner,
@@ -31,6 +38,7 @@ async function updateReadme(owner, repo, path, message, content) {
       path: path,
       message: message,
       content: content,
+      sha: sha, // Include the SHA of the current content
     });
     return response.data;
   } catch (error) {
@@ -38,42 +46,22 @@ async function updateReadme(owner, repo, path, message, content) {
   }
 }
 
-router.get('/updateRepository', async function (req, res, next) {
-  try {
-    const owner = 'smithdavedesign'; // GitHub owner (your username)
-    const repo = 'smithdavedesign'; // GitHub repository name
-
-    // Define the updates you want to apply to the repository metadata
-    const updates = {
-      name: 'Hello-World', // New repository name
-      description: 'This is your first repository', // New description
-      homepage: 'https://github.com', // New homepage URL
-      'private': true, // Set repository to private
-      has_issues: true, // Enable issues
-      has_projects: true, // Enable projects
-      has_wiki: true, // Enable wiki
-    };
-
-    const result = await updateRepository(owner, repo, updates);
-
-    console.log('Repository metadata updated successfully.');
-    res.send(result);
-  } catch (error) {
-    console.error('Error updating repository metadata:', error);
-    res.status(error.status || 500).send('Error updating repository metadata: ' + error.message);
-  }
-});
-
 router.get('/updateReadMe', async function (req, res, next) {
   try {
     const owner = 'smithdavedesign'; // GitHub owner (your username)
-    const repo = 'portfolio'; // GitHub repository name
-    const path = 'secondProject/README.md'; // Replace with the path to the README file
-    const message = 'my commit message';
-    const content = ` ### Updated on: ${new Date().toISOString()}`;; // Base64-encoded content
-    const newContentBase64 = Buffer.from(content).toString('base64'); // Encode the new content as Base64
-    const result = await updateReadme(owner, repo, path, message, newContentBase64);
+    const repo = 'gitHub-cron-job-app'; // GitHub repository name
+    const path = 'README.md'; // Replace with the path to the README file
+    const message = 'Update README content';
+    const newContent = `### Updated on: ${new Date().toISOString()}`;
 
+    // Fetch the current content and SHA of the README file
+    const fileData = await getFileContentAndSha(owner, repo, path);
+
+    // Encode the new content as Base64
+    const newContentBase64 = Buffer.from(newContent).toString('base64');
+
+    // Update the README file with the new content and SHA
+    const result = await updateReadme(owner, repo, path, message, newContentBase64, fileData.sha);
 
     console.log('README updated successfully.');
     res.send(result);
@@ -83,5 +71,29 @@ router.get('/updateReadMe', async function (req, res, next) {
   }
 });
 
+cron.schedule('30 14 * * 1-5', async () => {
+  try {
+    const owner = 'smithdavedesign'; // GitHub owner (your username)
+    const repo = 'gitHub-cron-job-app'; // GitHub repository name
+    const path = 'README.md'; // Replace with the path to the README file
+    const message = 'Update README content';
+    const newContent = `### Updated on: ${new Date().toISOString()}`;
+
+    // Fetch the current content and SHA of the README file
+    const fileData = await getFileContentAndSha(owner, repo, path);
+
+    // Encode the new content as Base64
+    const newContentBase64 = Buffer.from(newContent).toString('base64');
+
+    // Update the README file with the new content and SHA
+    const result = await updateReadme(owner, repo, path, message, newContentBase64, fileData.sha);
+
+    console.log('README updated successfully.');
+    res.send(result);
+  } catch (error) {
+    console.error('Error updating README:', error);
+    res.status(error.status || 500).send('Error updating README: ' + error.message);
+  }
+});
 
 module.exports = router;
