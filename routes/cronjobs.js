@@ -46,35 +46,36 @@ async function updateReadme(owner, repo, path, message, content, sha) {
   }
 }
 
+// Constants for random message generation
+const MOTIVATIONAL_MESSAGES = [
+  'Have a great day!',
+  'Keep coding and stay awesome!',
+  'You\'re doing amazing work!',
+  'Stay positive and keep learning!',
+  'Embrace the challenges ahead!',
+  'Your code is making a difference!',
+  'Keep pushing forward!',
+  'Today is a great day to build something!',
+  'Innovation starts with you!',
+  'Dream big, code bigger!',
+  'Every bug fixed is a step forward!',
+  'Your dedication inspires others!',
+  'Keep breaking boundaries!',
+  'Make today count!',
+  'Success is built one line at a time!'
+];
+
+const EMOJIS = [
+  '🚀', '💻', '🎉', '✨', '🌟', '💪', '🔥', '⚡', 
+  '🎯', '🏆', '🌈', '🎨', '💡', '🎸', '🌺', '🦄',
+  '🎭', '🎪', '🎬', '📚', '🔮', '🌸', '🍀', '🌙'
+];
+
 // Function to generate random message of the day with random emojis
 function getRandomMessageOfTheDay() {
-  const messages = [
-    'Have a great day!',
-    'Keep coding and stay awesome!',
-    'You\'re doing amazing work!',
-    'Stay positive and keep learning!',
-    'Embrace the challenges ahead!',
-    'Your code is making a difference!',
-    'Keep pushing forward!',
-    'Today is a great day to build something!',
-    'Innovation starts with you!',
-    'Dream big, code bigger!',
-    'Every bug fixed is a step forward!',
-    'Your dedication inspires others!',
-    'Keep breaking boundaries!',
-    'Make today count!',
-    'Success is built one line at a time!'
-  ];
-  
-  const emojis = [
-    '🚀', '💻', '🎉', '✨', '🌟', '💪', '🔥', '⚡', 
-    '🎯', '🏆', '🌈', '🎨', '💡', '🎸', '🌺', '🦄',
-    '🎭', '🎪', '🎬', '📚', '🔮', '🌸', '🍀', '🌙'
-  ];
-  
-  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-  const emoji1 = emojis[Math.floor(Math.random() * emojis.length)];
-  const emoji2 = emojis[Math.floor(Math.random() * emojis.length)];
+  const randomMessage = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+  const emoji1 = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+  const emoji2 = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
   
   return `${emoji1} ${randomMessage} ${emoji2}`;
 }
@@ -95,8 +96,10 @@ router.get('/updateReadMe', async function (req, res, next) {
     // Generate random message of the day
     const randomMessage = getRandomMessageOfTheDay();
     
-    // Append the new message on a new line
-    const updatedContent = `${currentContent}\n${randomMessage}`;
+    // Append the new message on a new line (add newline only if content doesn't already end with one)
+    const updatedContent = currentContent.endsWith('\n') 
+      ? `${currentContent}${randomMessage}` 
+      : `${currentContent}\n${randomMessage}`;
 
     // Encode the updated content as Base64
     const updatedContentBase64 = Buffer.from(updatedContent).toString('base64');
@@ -128,8 +131,10 @@ cron.schedule('30 14 * * 1-5', async () => {
     // Generate random message of the day
     const randomMessage = getRandomMessageOfTheDay();
     
-    // Append the new message on a new line
-    const updatedContent = `${currentContent}\n${randomMessage}`;
+    // Append the new message on a new line (add newline only if content doesn't already end with one)
+    const updatedContent = currentContent.endsWith('\n') 
+      ? `${currentContent}${randomMessage}` 
+      : `${currentContent}\n${randomMessage}`;
 
     // Encode the updated content as Base64
     const updatedContentBase64 = Buffer.from(updatedContent).toString('base64');
