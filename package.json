@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "echo \"No tests specified yet. Run 'npm run lint' to check code quality.\" && npm run lint"
   },
   "dependencies": {
     "@octokit/core": "^5.0.0",
@@ -15,5 +18,8 @@
     "fs": "^0.0.1-security",
     "morgan": "~1.9.1",
     "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
   }
 }
