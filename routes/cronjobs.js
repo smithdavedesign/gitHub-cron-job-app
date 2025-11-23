@@ -46,22 +46,66 @@ async function updateReadme(owner, repo, path, message, content, sha) {
   }
 }
 
+// Constants for random message generation
+const MOTIVATIONAL_MESSAGES = [
+  'Have a great day!',
+  'Keep coding and stay awesome!',
+  'You\'re doing amazing work!',
+  'Stay positive and keep learning!',
+  'Embrace the challenges ahead!',
+  'Your code is making a difference!',
+  'Keep pushing forward!',
+  'Today is a great day to build something!',
+  'Innovation starts with you!',
+  'Dream big, code bigger!',
+  'Every bug fixed is a step forward!',
+  'Your dedication inspires others!',
+  'Keep breaking boundaries!',
+  'Make today count!',
+  'Success is built one line at a time!'
+];
+
+const EMOJIS = [
+  '🚀', '💻', '🎉', '✨', '🌟', '💪', '🔥', '⚡', 
+  '🎯', '🏆', '🌈', '🎨', '💡', '🎸', '🌺', '🦄',
+  '🎭', '🎪', '🎬', '📚', '🔮', '🌸', '🍀', '🌙'
+];
+
+// Function to generate random message of the day with random emojis
+function getRandomMessageOfTheDay() {
+  const randomMessage = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+  const emoji1 = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+  const emoji2 = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+  
+  return `${emoji1} ${randomMessage} ${emoji2}`;
+}
+
 router.get('/updateReadMe', async function (req, res, next) {
   try {
     const owner = 'smithdavedesign'; // GitHub owner (your username)
     const repo = 'gitHub-cron-job-app'; // GitHub repository name
     const path = 'README.md'; // Replace with the path to the README file
-    const message = 'Update README content';
-    const newContent = `### Updated on: ${new Date().toISOString()}`;
-
+    const message = 'Append random message of the day';
+    
     // Fetch the current content and SHA of the README file
     const fileData = await getFileContentAndSha(owner, repo, path);
+    
+    // Decode the current content from Base64
+    const currentContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+    
+    // Generate random message of the day
+    const randomMessage = getRandomMessageOfTheDay();
+    
+    // Append the new message on a new line (add newline only if content doesn't already end with one)
+    const updatedContent = currentContent.endsWith('\n') 
+      ? `${currentContent}${randomMessage}` 
+      : `${currentContent}\n${randomMessage}`;
 
-    // Encode the new content as Base64
-    const newContentBase64 = Buffer.from(newContent).toString('base64');
+    // Encode the updated content as Base64
+    const updatedContentBase64 = Buffer.from(updatedContent).toString('base64');
 
-    // Update the README file with the new content and SHA
-    const result = await updateReadme(owner, repo, path, message, newContentBase64, fileData.sha);
+    // Update the README file with the updated content and SHA
+    const result = await updateReadme(owner, repo, path, message, updatedContentBase64, fileData.sha);
 
     console.log('README updated successfully.');
     res.send(result);
@@ -76,23 +120,31 @@ cron.schedule('30 14 * * 1-5', async () => {
     const owner = 'smithdavedesign'; // GitHub owner (your username)
     const repo = 'gitHub-cron-job-app'; // GitHub repository name
     const path = 'README.md'; // Replace with the path to the README file
-    const message = 'Update README content';
-    const newContent = `### Updated on: ${new Date().toISOString()}`;
-
+    const message = 'Append random message of the day';
+    
     // Fetch the current content and SHA of the README file
     const fileData = await getFileContentAndSha(owner, repo, path);
+    
+    // Decode the current content from Base64
+    const currentContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+    
+    // Generate random message of the day
+    const randomMessage = getRandomMessageOfTheDay();
+    
+    // Append the new message on a new line (add newline only if content doesn't already end with one)
+    const updatedContent = currentContent.endsWith('\n') 
+      ? `${currentContent}${randomMessage}` 
+      : `${currentContent}\n${randomMessage}`;
 
-    // Encode the new content as Base64
-    const newContentBase64 = Buffer.from(newContent).toString('base64');
+    // Encode the updated content as Base64
+    const updatedContentBase64 = Buffer.from(updatedContent).toString('base64');
 
-    // Update the README file with the new content and SHA
-    const result = await updateReadme(owner, repo, path, message, newContentBase64, fileData.sha);
+    // Update the README file with the updated content and SHA
+    const result = await updateReadme(owner, repo, path, message, updatedContentBase64, fileData.sha);
 
-    console.log('README updated successfully.');
-    res.send(result);
+    console.log('README updated successfully via cron job.');
   } catch (error) {
-    console.error('Error updating README:', error);
-    res.status(error.status || 500).send('Error updating README: ' + error.message);
+    console.error('Error updating README via cron job:', error);
   }
 });
 
